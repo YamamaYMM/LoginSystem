@@ -1,0 +1,341 @@
+/* ブラウザ標準の余白を強制的にゼロにする設定（スクロール対応） */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.blue-bg {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #80ffa6 0%, #d7dfef 100%);
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+.btn-group {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.delete-btn {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background-color: #e60000;
+}
+
+.admin-btn {
+  background-color: #001aff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.warning-btn {
+  background-color: #ff8c00;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.warning-btn:hover {
+  background-color: #e07b00;
+}
+
+.msg-btn {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.msg-btn:hover {
+  background-color: #138496;
+}
+
+/* 右上のメッセージ通知エリア用スタイル */
+#topRightMsgNotifArea {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.msg-notif-bell-btn {
+  position: relative;
+  background-color: white;
+  color: #222;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 7px 14px;
+  font-size: 0.9em;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.msg-notif-bell-btn:hover {
+  background-color: #f4f6f9;
+}
+
+.msg-notif-badge {
+  background-color: #ff3b30;
+  color: white;
+  font-size: 0.78em;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+}
+
+.msg-notif-dropdown {
+  display: none;
+  margin-top: 8px;
+  width: 300px;
+  max-height: 360px;
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  text-align: left;
+  padding: 10px;
+}
+
+.msg-notif-dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  font-size: 0.85em;
+  font-weight: bold;
+  color: #333;
+}
+
+.msg-notif-item {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+  margin-bottom: 6px;
+  font-size: 0.85em;
+  cursor: pointer;
+  background-color: #fff;
+}
+
+.msg-notif-item:hover {
+  background-color: #f5f8ff;
+}
+
+.msg-notif-item.unread {
+  background-color: #eef4ff;
+  border-left: 4px solid #001aff;
+}
+
+/* 右上の新着トースト通知 */
+#msgToastContainer {
+  position: fixed;
+  top: 62px;
+  right: 20px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.msg-toast {
+  pointer-events: auto;
+  width: 290px;
+  background-color: #1e293b;
+  color: white;
+  border-left: 4px solid #38bdf8;
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  font-size: 0.85em;
+  text-align: left;
+  cursor: pointer;
+  animation: slideInRight 0.25s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* 登録ユーザー一覧テーブル用のスタイル */
+#adminUserTableContainer {
+  margin-top: 30px;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+table.user-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 0.9em;
+}
+
+table.user-list-table th,
+table.user-list-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+table.user-list-table th {
+  background-color: #f4f6f9;
+}
+
+table.user-list-table th:nth-child(1),
+table.user-list-table td:nth-child(1) {
+  width: 15%;
+}
+
+table.user-list-table th:nth-child(6),
+table.user-list-table td:nth-child(6) {
+  width: 15%;
+}
+
+.toggle-role-btn {
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 0.85em;
+  border-radius: 4px;
+  border: 1px solid #888;
+}
+
+/* モーダル共通スタイル */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  overflow-y: auto;
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 8% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 90%;
+  max-width: 420px;
+  border-radius: 10px;
+  text-align: left;
+}
+
+/* メッセージモーダル内のタブ・リスト用スタイル */
+.msg-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 8px;
+}
+
+.msg-tab-btn {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  background-color: #f4f6f9;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.msg-tab-btn.active {
+  background-color: #001aff;
+  color: white;
+  border-color: #001aff;
+  font-weight: bold;
+}
+
+.inbox-list {
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px;
+  background-color: #fafafa;
+}
+
+.inbox-item {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+  font-size: 0.9em;
+}
+
+.inbox-item.unread {
+  border-left: 4px solid #001aff;
+  background-color: #f0f5ff;
+}
+
+.inbox-item-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8em;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.inbox-item-subject {
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #222;
+}
+
+.inbox-item-body {
+  white-space: pre-wrap;
+  color: #333;
+  margin-bottom: 6px;
+}

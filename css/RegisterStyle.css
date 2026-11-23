@@ -1,0 +1,41 @@
+ html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .blue-bg {
+      width: 100%;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+      background: linear-gradient(135deg, #80ffa6 0%, #d7dfef 100%);
+      background-attachment: fixed;
+      background-size: cover;
+      text-align: center;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      margin: 20px auto;
+      padding: 24px;
+      box-sizing: border-box;
+      border-radius: 16px;
+      background: #d3d3d3;
+    }
+    .login-panel input[type="text"],
+    .login-panel input[type="password"],
+    .login-panel select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px;
+      margin-top: 5px;
+    }
+    .my-button {
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #registerForm input::placeholder {
+      user-select: none;
+      -webkit-user-select: none;
+    }

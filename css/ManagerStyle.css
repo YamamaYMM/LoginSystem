@@ -1,0 +1,133 @@
+    /* --- 通知メニュー用のデザイン --- */
+    #notificationArea {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 1000;
+      font-family: sans-serif;
+    }
+    #notificationToggle {
+      background-color: #5a8ae5;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    #notificationDropdown {
+      display: none;
+      position: absolute;
+      top: 40px;
+      left: 0;
+      width: 320px;
+      max-height: 300px;
+      overflow-y: auto;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      padding: 10px;
+    }
+    .notification-item {
+      padding: 8px;
+      margin-bottom: 6px;
+      border-left: 4px solid #5a8ae5;
+      background: #f4f6f9;
+      font-size: 0.85em;
+      border-radius: 2px;
+    }
+    .notification-item.alert {
+      border-left-color: #ff4d4d;
+      background: #fff5f5;
+    }
+
+    /* --- システムステータス（検証モード）用のスタイル --- */
+    .status-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: #fff;
+    }
+    .status-table th, .status-table td {
+      border: 1px solid #ddd;
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 0.9em;
+    }
+    .status-table th {
+      background-color: #5a79b2;
+      color: white;
+      width: 40%;
+    }
+    .status-table td {
+      background-color: #fafafa;
+    }
+
+    .db-toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .db-toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .db-toggle-slider {
+      position: absolute;
+      inset: 0;
+      background-color: #adb5bd;
+      border-radius: 999px;
+      transition: background-color 0.2s ease;
+      cursor: pointer;
+    }
+
+    .db-toggle-slider::before {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      left: 3px;
+      top: 3px;
+      background-color: #ffffff;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+
+    .db-toggle-switch input:checked + .db-toggle-slider {
+      background-color: #198754;
+    }
+
+    .db-toggle-switch input:checked + .db-toggle-slider::before {
+      transform: translateX(22px);
+    }
+
+    .db-toggle-switch input:disabled + .db-toggle-slider {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .db-toggle-switch input:focus-visible + .db-toggle-slider {
+      outline: 2px solid #0d6efd;
+      outline-offset: 2px;
+    }
+
+    .status-ok {
+      color: green;
+      font-weight: bold;
+    }
+    .status-ng {
+      color: red;
+      font-weight: bold;
+    }
+    #mainContent input::placeholder {
+      user-select: none;
+      -webkit-user-select: none;
+    }

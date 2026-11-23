@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ログイン</title>
+  <link rel="icon" type="image/png" href="LoginPhoto/LMS.png">
+  <link rel="stylesheet" href="CSS/LoginStyle.css">
+  <link rel="stylesheet" href="CSS/TitleStyle.css">
+</head>
+<body>
+  <div class="blue-bg">
+    <h1>ログイン</h1>
+    <h2 id="clock"></h2>
+    <div class="login-panel">
+      <form id="loginForm">
+        <p style="text-align: left; margin-bottom: 0;">お名前 (氏名)</p>
+        <input type="text" id="nameInput" name="name" placeholder="名前を入力">
+
+        <p style="text-align: left; margin-bottom: 0; margin-top: 15px;">ID</p>
+        <input type="text" id="idInput" name="id" placeholder="8文字以上">
+
+        <p style="text-align: left; margin-bottom: 0; margin-top: 15px;">パスワード</p>
+        <input type="password" id="passInput" name="password" placeholder="8文字以上">
+        <label style="display: block; text-align: left; margin-top: 8px; font-size: 13px;">
+          <input type="checkbox" id="togglePassword">
+          <span style="user-select: none; -webkit-user-select: none;">パスワードを表示</span>
+        </label>
+        <br><br>
+        <button class="my-button" style="width: 130px; height: 45px;" type="submit">決定</button>
+      </form>
+
+      <!-- ゲストとしてログインするボタン -->
+      <button type="button" id="guestLoginBtn" class="guest-button">ゲストとしてログイン</button>
+
+      <!-- 新規登録 & パスワード忘れ対応エリア -->
+      <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+        <button type="button" onclick="location.href='LoginRegister.html'" style="cursor: pointer; padding: 5px 10px; font-size: 13px;">新規登録</button>
+        <button type="button" id="openForgotModal" style="cursor: pointer; padding: 5px 10px; font-size: 13px; background: none; border: none; color: #0056b3; text-decoration: underline;">パスワードをお忘れですか？</button>
+      </div>
+    </div>
+
+    <p id="errorMessage" style="color: red; font-weight: bold;"></p>
+  </div>
+
+  <!-- パスワード変更モーダル -->
+  <div id="forgotModal" class="modal">
+    <div class="modal-content">
+      <h3>パスワードの変更</h3>
+      <p style="font-size: 0.9em; color: #555;">登録したお名前とIDを入力し、新しいパスワードを設定してください。</p>
+      <input type="text" id="forgotNameInput" placeholder="登録したお名前 (氏名)" style="width: 100%; box-sizing: border-box; padding: 6px; margin-bottom: 10px;">
+      <input type="text" id="forgotIdInput" placeholder="登録したID" style="width: 100%; box-sizing: border-box; padding: 6px; margin-bottom: 10px;">
+      <input type="password" id="newPasswordInput" placeholder="新しいパスワード (8文字以上)" style="width: 100%; box-sizing: border-box; padding: 6px; margin-bottom: 10px;">
+      <input type="password" id="confirmNewPasswordInput" placeholder="新しいパスワードの確認" style="width: 100%; box-sizing: border-box; padding: 6px; margin-bottom: 10px;">
+      <label style="font-size: 13px; user-select: none; -webkit-user-select: none;">
+        <input type="checkbox" id="toggleNewPassword"> パスワードを表示
+      </label>
+      <div id="forgotResult" style="font-size: 0.9em; margin: 10px 0 15px 0; color: #333; font-weight: bold;"></div>
+      <div style="text-align: right;">
+        <button type="button" id="searchAccountBtn" style="padding: 5px 10px; cursor: pointer;">パスワードを変更</button>
+        <button type="button" id="closeForgotModal" style="padding: 5px 10px; cursor: pointer; margin-left: 5px;">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/ui/titleView.js"></script>
+</body>
+</html>

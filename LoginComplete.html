@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>メインメニュー</title>
+  <link rel="icon" type="image/png" href="LoginPhoto/LMS.png">
+  <link rel="stylesheet" href="CSS/LoginStyle.css">
+  <link rel="stylesheet" href="CSS/CompleteStyle.css">
+</head>
+<body>
+
+  <!-- 右上のメッセージ通知ベル＆ドロップダウン -->
+  <div id="topRightMsgNotifArea" style="display: none;">
+    <button type="button" id="msgNotifBellBtn" class="msg-notif-bell-btn">
+      <span>🔔 メッセージ通知</span>
+      <span id="msgNotifBadge" class="msg-notif-badge" style="display: none;">0</span>
+    </button>
+    <div id="msgNotifDropdown" class="msg-notif-dropdown">
+      <div class="msg-notif-dropdown-header">
+        <span>受信メッセージ通知</span>
+        <button type="button" id="markAllMsgReadBtn" style="font-size: 0.8em; padding: 2px 6px; cursor: pointer;">すべて既読</button>
+      </div>
+      <div id="msgNotifDropdownList"></div>
+    </div>
+  </div>
+
+  <!-- 右上の新着ポップアップ通知コンテナ -->
+  <div id="msgToastContainer"></div>
+
+  <div class="blue-bg">
+    <!-- 不正アクセス時用のメッセージ表示エリア -->
+    <p id="errorMessage" style="color: red; font-weight: bold; font-size: 2em; text-align: center; margin-top: 50px;"></p>
+
+    <!-- 初期状態では完全に非表示 (display: none) に設定 -->
+    <div id="mainContent" style="display: none; text-align: center;">
+      <h1 id="pageTitle">メインメニュー</h1>
+      <p id="welcomeMessage" style="font-size: 1.2em; font-weight: bold;"></p>
+
+      <!-- マスター・サブマスター専用の登録アカウント一覧＆権限付与テーブル -->
+      <div id="adminUserTableContainer" style="display: none;">
+        <h3>📋 登録アカウントおよび管理権限の管理</h3>
+        <table class="user-list-table">
+          <thead>
+            <tr>
+              <th>お名前</th>
+              <th>ID</th>
+              <th>権限 / ステータス</th>
+              <th>操作 (管理権限の付与/剥奪)</th>
+              <th>削除</th>
+              <th>ログアウト</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody"></tbody>
+        </table>
+      </div>
+      <div class="btn-group">
+        <button id="openMessageModalBtn" class="msg-btn">メッセージ</button>
+        <button id="goToManagerBtn" class="admin-btn" style="display: none;">管理画面へ移動</button>
+        <button id="openPasswordModalBtn" class="warning-btn">パスワードを変更</button>
+        <button id="logoutButton" style="cursor: pointer; padding: 6px 12px;">ログアウト</button>
+        <button id="deleteAccountButton" class="delete-btn">アカウントを削除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- メッセージ送受信モーダルウィンドウ -->
+  <div id="messageModal" class="modal">
+    <div class="modal-content">
+      <h3 style="margin-top: 0;">✉️ メッセージ</h3>
+
+      <div class="msg-tabs">
+        <button type="button" id="tabComposeBtn" class="msg-tab-btn active">新規作成</button>
+        <button type="button" id="tabInboxBtn" class="msg-tab-btn">受信トレイ</button>
+        <button type="button" id="tabSentBtn" class="msg-tab-btn">送信済み</button>
+      </div>
+
+      <!-- 新規作成ビュー -->
+      <div id="composeView">
+        <p style="margin-bottom: 4px; font-size: 0.85em; color: #555;">宛先アカウント（ID または お名前）</p>
+        <input type="text" id="toInput" list="recipientOptions" style="width: 100%; box-sizing: border-box; padding: 6px; margin-bottom: 10px;" placeholder="宛先のIDまたはお名前を選択・入力">
+        <datalist id="recipientOptions"></datalist>
+
+        <p style="margin-bottom: 4px; font-size: 0.85em; color: #555;">件名</p>
+        <input type="text" id="subjectInput" style="width: 100%; box-sizing: border-box; padding: 6px; margin-bottom: 10px;" placeholder="件名を入力">
+
+        <p style="margin-bottom: 4px; font-size: 0.85em; color: #555;">本文</p>
+        <textarea id="bodyInput" style="width: 100%; height: 100px; box-sizing: border-box; padding: 6px; margin-bottom: 8px; resize: vertical;" placeholder="メッセージ本文を入力"></textarea>
+
+        <p id="messageStatusMsg" style="font-size: 0.85em; font-weight: bold; margin: 4px 0 10px 0;"></p>
+        <div id="messageFileName" style="font-size: 0.85em; color: #555; margin-bottom: 4px;"></div>
+        <button type="button" id="fileUploadBtn" style="padding: 6px 12px; cursor: pointer; margin-bottom: 10px;">ファイルを選択</button>
+        <input type="file" id="messageFileInput" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <button type="button" id="sendMessageBtn" style="padding: 6px 14px; cursor: pointer; background-color: #001aff; color: white; border: none; border-radius: 4px;">送信</button>
+            <button type="button" id="clearMessageBtn" style="padding: 6px 12px; cursor: pointer; background-color: #ff4d4d; color: white; border: none; border-radius: 4px; margin-left: 4px;">クリア</button>
+          </div>
+          <button type="button" id="closeMessageModal" style="padding: 6px 12px; cursor: pointer;">閉じる</button>
+        </div>
+      </div>
+
+      <!-- 受信トレイビュー -->
+      <div id="inboxView" style="display: none;">
+        <div id="inboxList" class="inbox-list"></div>
+        <div style="text-align: right; margin-top: 12px;">
+          <button type="button" id="closeMessageModalInbox" style="padding: 6px 12px; cursor: pointer;">閉じる</button>
+        </div>
+      </div>
+
+      <!-- 送信済みメッセージビュー -->
+      <div id="sentView" style="display: none;">
+        <div id="sentList" class="inbox-list"></div>
+        <div style="text-align: right; margin-top: 12px;">
+          <button type="button" id="closeMessageModalSent" style="padding: 6px 12px; cursor: pointer;">閉じる</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- パスワード変更用モーダルウィンドウ -->
+  <div id="passwordModal" class="modal">
+    <div class="modal-content" style="max-width: 340px; margin: 15% auto;">
+      <h3>パスワードの変更</h3>
+      <p style="font-size: 0.85em; color: #555; margin-bottom: 10px;">新しいパスワードは8文字以上で入力してください（同じ文字の連続などは使用できません）。</p>
+
+      <p style="margin-bottom: 2px; font-size: 0.9em;">現在のパスワード</p>
+      <input type="password" id="currentPassInput" style="width: 100%; box-sizing: border-box; padding: 6px; margin-bottom: 10px;" placeholder="現在のパスワード">
+
+      <p style="margin-bottom: 2px; font-size: 0.9em;">新しいパスワード</p>
+      <input type="password" id="newPassInput" style="width: 100%; box-sizing: border-box; padding: 6px; margin-bottom: 10px;" placeholder="新しいパスワード (8文字以上)">
+
+      <p style="margin-bottom: 2px; font-size: 0.9em;">確認</p>
+      <input type="password" id="confirmNewPassInput" style="width: 100%; box-sizing: border-box; padding: 6px; margin-bottom: 10px;" placeholder="新しいパスワードの確認">
+
+      <label style="display: block; text-align: left; margin-top: 8px; font-size: 13px;">
+        <input type="checkbox" id="toggleModalPassword"> パスワードを表示
+      </label>
+
+      <p id="modalErrorMsg" style="color: red; font-size: 0.85em; font-weight: bold; margin-bottom: 10px;"></p>
+
+      <div style="text-align: right;">
+        <button type="button" id="submitPasswordChange" style="padding: 6px 12px; cursor: pointer; background-color: #001aff; color: white; border: none; border-radius: 4px;">変更する</button>
+        <button type="button" id="closePasswordModal" style="padding: 6px 12px; cursor: pointer; margin-left: 5px;">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/ui/completeView.js"></script>
+</body>
+</html>

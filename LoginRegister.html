@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新規アカウント登録</title>
+  <link rel="icon" type="image/png" href="LoginPhoto/LMS.png">
+  <link rel="stylesheet" href="CSS/LoginStyle.css">
+  <link rel="stylesheet" href="CSS/RegisterStyle.css">
+</head>
+<body>
+  <div class="blue-bg">
+    <h1>新規アカウント登録</h1>
+    <div class="login-panel">
+      <form id="registerForm">
+        <p style="text-align: left; margin-bottom: 0;">お名前 (氏名)</p>
+        <input type="text" id="nameInput" placeholder="名前を入力">
+
+        <!-- アカウント種別の選択メニュー -->
+        <p style="text-align: left; margin-bottom: 0; margin-top: 15px;">アカウント種別</p>
+        <select id="roleSelect">
+          <option value="general">一般ユーザー</option>
+          <option value="submaster">サブマスターアカウント</option>
+          <option value="master">マスターアカウント</option>
+        </select>
+
+        <p style="text-align: left; margin-bottom: 0; margin-top: 15px;">新規ID</p>
+        <input type="text" id="newIdInput" placeholder="8文字以上">
+
+        <p style="text-align: left; margin-bottom: 0; margin-top: 15px;">新規パスワード</p>
+        <input type="password" id="newPassInput" placeholder="8文字以上">
+
+        <p style="text-align: left; margin-bottom: 0; margin-top: 15px;">パスワードの確認</p>
+        <input type="password" id="confirmPassInput" placeholder="再入力">
+
+        <label style="display: block; text-align: left; margin-top: 8px; font-size: 13px;">
+          <input type="checkbox" id="togglePassword">
+          <span style="user-select: none; -webkit-user-select: none;">パスワードを表示</span>
+        </label>
+        <br><br>
+        <button class="my-button" style="width: 130px; height: 45px;" type="submit">登録する</button>
+      </form>
+      <br>
+      <button type="button" onclick="location.href='LoginTitle.html'" style="cursor: pointer; padding: 5px 10px;">ログイン画面へ戻る</button>
+    </div>
+
+    <p id="errorMessage" style="color: red; font-weight: bold;"></p>
+  </div>
+
+  <script type="module" src="js/ui/registerView.js"></script>
+</body>
+</html>

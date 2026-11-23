@@ -1,0 +1,3 @@
+INSERT INTO users (id, name, password_hash, role, is_manager)
+VALUES ('testmaster01', 'マスター管理者', '<PHP_PASSWORD_HASH>', 'master', 1)
+ON DUPLICATE KEY UPDATE name = VALUES(name), role = VALUES(role), is_manager = VALUES(is_manager);

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>管理画面</title>
+  <link rel="icon" type="image/png" href="LoginPhoto/LMS.png">
+  <link rel="stylesheet" href="CSS/LoginStyle.css">
+  <link rel="stylesheet" href="CSS/ManagerStyle.css">
+</head>
+<body>
+
+  <!-- 左上の通知メニュー -->
+  <div id="notificationArea">
+    <button type="button" id="notificationToggle">🔔 通知 (<span id="notificationCount">0</span>)</button>
+    <div id="notificationDropdown">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 8px;">
+        <span style="font-weight: bold; font-size: 0.9em;">システム通知ログ</span>
+        <button type="button" id="clearNotifications" style="font-size: 0.75em; cursor: pointer; padding: 2px 5px;">クリア</button>
+      </div>
+      <div id="notificationList" style="color: #666; font-size: 0.85em;">通知はありません。</div>
+    </div>
+  </div>
+
+  <div class="metallic-silver-bg">
+    <h1 id="pageTitle" style="text-align: center;">管理画面</h1>
+
+    <p id="errorMessage" style="color: red; font-weight: bold; font-size: 2em; text-align: center;"></p>
+
+    <div id="mainContent" style="display: none;">
+
+      <!-- システムステータス（検証モード）パネル -->
+      <div style="width: 45%; margin: 0 auto 30px auto; border: 2px solid #5a79b2; padding: 20px; border-radius: 8px; background-color: #f9f9f9; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        <h3 style="text-align: center; margin-top: 0; color: #5a79b2;">システムステータス</h3>
+        <table class="status-table">
+          <tr>
+            <th>ログイン状況</th>
+            <td id="loginStatus">-</td>
+          </tr>
+          <tr>
+            <th>ログイン画面のロック状態</th>
+            <td id="lockStatus">-</td>
+          </tr>
+          <tr>
+            <th>時間外制限 (22:00〜7:00)</th>
+            <td id="timeRestrictionStatus">-</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- データベース接続状態エリア（サーバー環境変数を使用） -->
+      <div style="width: 45%; margin: 0 auto 30px auto; border: 2px solid #ccc; padding: 20px; border-radius: 8px; background-color: #f9f9f9;">
+        <h3 style="text-align: center; margin-top: 0;">データベース状態</h3>
+        <p id="dbStatusMessage" style="text-align: center; font-size: 0.9em; margin-top: 10px; font-weight: bold;">
+          DB接続情報はサーバー環境変数で管理されます。
+        </p>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 12px;">
+          <span style="font-weight: bold;">DB接続</span>
+          <label for="dbConnectionToggle" class="db-toggle-switch" aria-label="DB接続のON/OFF切り替え">
+            <input type="checkbox" id="dbConnectionToggle">
+            <span class="db-toggle-slider"></span>
+          </label>
+          <span id="dbToggleLabel" style="font-size: 0.9em; color: #555; min-width: 28px; text-align: left;">OFF</span>
+        </div>
+      </div>
+
+      <!-- ユーザー一覧テーブル -->
+      <table id="userTable" border="2" style="text-align: center; margin: 0 auto; width: 55%; background-color: white;">
+        <tr>
+          <th>名前</th>
+          <th>ID</th>
+          <th>ログイン時刻</th>
+        </tr>
+      </table>
+
+      <div style="text-align: center; margin-top: 20px;">
+        <button type="button" id="resetButton" style="background-color: #ff4d4d; color: white; margin-right: 10px; cursor: pointer;" width="100px" height="40px">履歴をリセット</button>
+        <button type="button" id="backToCompleteButton" style="cursor: pointer; width: 140px; height: 30px;">メインメニューへ</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/ui/managerView.js"></script>
+</body>
+</html>
