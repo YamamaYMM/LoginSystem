@@ -15,15 +15,35 @@ class TitleView {
     this.api = api;
     this.state = state;
     this.validationErrorCount = parseInt(sessionStorage.getItem('validationErrorCount') || '0', 10);
+    this.isTestEnv = false;
   }
 
-  init() {
+  async init() {
     this.startClock();
     this.bindPasswordToggles();
     this.bindGuestLogin();
     this.bindForgotModal();
     this.bindLoginForm();
     this.checkLockStatus();
+    await this.detectTestEnv();
+  }
+
+  async detectTestEnv() {
+    try {
+      const res = await fetch('auth_api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ action: 'session_status' }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && data.appEnv === 'test') {
+        this.isTestEnv = true;
+      }
+    } catch {
+      // 取得失敗時は通常どおり時間帯制限を適用
+    }
   }
 
   startClock() {
@@ -163,7 +183,7 @@ class TitleView {
 
   validateInput(nameValue, idValue, passValue) {
     const currentHour = new Date().getHours();
-    const isRestrictedTime = currentHour >= 22 || currentHour < 7;
+    const isRestrictedTime = !this.isTestEnv && (currentHour >= 22 || currentHour < 7);
 
     if (isRestrictedTime) return { error: '現在はログインできない時間帯です', isRestrictedTime: true };
     if (!nameValue || idValue === '' || passValue === '') {

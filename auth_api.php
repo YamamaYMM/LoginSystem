@@ -112,12 +112,15 @@ try {
 
     // 4. セッション状態確認
     if ($action === 'session_status') {
+        $appEnv = app_env_name();
+
         if (empty($_SESSION['user_id'])) {
             json_response(200, [
                 'status' => 'success',
                 'authenticated' => false,
                 'user' => null,
                 'csrfToken' => $csrfToken,
+                'appEnv' => $appEnv,
             ]);
         }
 
@@ -133,6 +136,7 @@ try {
                 'authenticated' => false,
                 'user' => null,
                 'csrfToken' => $csrfToken,
+                'appEnv' => $appEnv,
             ]);
         }
 
@@ -140,6 +144,7 @@ try {
             'status' => 'success',
             'authenticated' => true,
             'csrfToken' => $csrfToken,
+            'appEnv' => $appEnv,
             'user' => [
                 'id' => $user['id'],
                 'name' => $user['name'],
