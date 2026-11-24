@@ -30,6 +30,7 @@ export class AppState {
     this.api = api;
     this.serverUser = null; // auth_api.php から取得したセッションユーザー情報
     this.usersCache = null; // サーバーから取得したユーザー一覧キャッシュ
+    this.isTestEnv = false;
     this.tabId = sessionStorage.getItem('tabId');
     if (!this.tabId) {
       this.tabId = 'tab_' + Math.random().toString(36).substring(2);
@@ -101,6 +102,9 @@ export class AppState {
 
     try {
       const res = await this.api.getSessionStatus();
+      if (res && res.appEnv === 'test') {
+        this.isTestEnv = true;
+      }
       if (res && res.authenticated && res.user) {
         this.serverUser = res.user;
         await this.refreshUsersFromServer();
@@ -144,6 +148,8 @@ export class AppState {
   }
 
   checkScheduledLogout() {
+    if (this.isTestEnv) return false;
+
     const now = new Date();
     const hour = now.getHours();
     if (hour < 22 && hour >= 6) return false;
