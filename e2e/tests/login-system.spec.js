@@ -36,9 +36,7 @@ async function ensureUsersRegistered(request, users) {
   const csrfToken = await getCsrfToken(request);
 
   for (const user of users) {
-    if (user.role && user.role !== 'general') {
-      continue;
-    }
+    const role = user.role || 'general';
 
     const res = await request.post(`${BASE_URL}/auth_api.php`, {
       headers: {
@@ -50,7 +48,7 @@ async function ensureUsersRegistered(request, users) {
         name: user.name,
         id: user.id,
         password: user.password,
-        role: 'general',
+        role,
       },
     });
 
@@ -193,6 +191,7 @@ test.describe('ログインおよび管理システムのE2E自動テスト', ()
   test('4. サブマスターから一般ユーザーの強制ログアウトが機能すること', async ({ browser, request }) => {
     await ensureUsersRegistered(request, INITIAL_USERS);
 
+    // active_sessions / forcedLogout:* を localStorage 経由で共有するため同一コンテキストを使用
     const context = await browser.newContext();
     const subPage = await context.newPage();
     const userPage = await context.newPage();
@@ -228,7 +227,7 @@ test.describe('ログインおよび管理システムのE2E自動テスト', ()
     await subPage.click('button[type="submit"]');
     await subPage.waitForURL(/LoginComplete\.html/, { timeout: 10000 });
 
-    // 強制ログアウトボタンが有効になるのを待ち、クリック
+    // 強制ログアウトボタンが有効になるのを待ち、クリック（ポーリング反映待ち込みで10秒）
     const logoutBtn = subPage.locator('.force-logout-btn[data-id="testuser01"]');
     await expect(logoutBtn).toBeEnabled({ timeout: 10000 });
     await logoutBtn.click();

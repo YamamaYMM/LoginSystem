@@ -6,6 +6,52 @@ if (date_default_timezone_get() !== 'Asia/Tokyo') {
     date_default_timezone_set('Asia/Tokyo');
 }
 
+function app_env_name(): string {
+    $val = getenv('APP_ENV');
+    if ($val !== false && trim($val) !== '') {
+        return strtolower(trim((string)$val));
+    }
+    if (isset($_ENV['APP_ENV']) && trim((string)$_ENV['APP_ENV']) !== '') {
+        return strtolower(trim((string)$_ENV['APP_ENV']));
+    }
+    return 'production';
+}
+
+function is_production(): bool {
+    return is_production_env();
+}
+
+function is_production_env(): bool {
+    return app_env_name() === 'production';
+}
+
+function is_debug_env(): bool {
+    return in_array(app_env_name(), ['local', 'test', 'development'], true);
+}
+
+function configure_runtime_error_handling(?string $logDir = null): void {
+    error_reporting(E_ALL);
+    ini_set('log_errors', '1');
+
+    $targetDir = $logDir ?? (__DIR__ . '/logs');
+    if (!is_dir($targetDir)) {
+        @mkdir($targetDir, 0755, true);
+    }
+    if (is_dir($targetDir) && is_writable($targetDir)) {
+        ini_set('error_log', $targetDir . '/php_error.log');
+    }
+
+    if (is_production_env()) {
+        ini_set('display_errors', '0');
+        ini_set('display_startup_errors', '0');
+    } else {
+        ini_set('display_errors', '1');
+        ini_set('display_startup_errors', '1');
+    }
+}
+
+configure_runtime_error_handling();
+
 function load_db_config(): array {
     $cfgFile = __DIR__ . '/db_config.php';
     $fileCfg = file_exists($cfgFile) ? require $cfgFile : [];

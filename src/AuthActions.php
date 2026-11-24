@@ -180,7 +180,14 @@ function delete_managed_user(PDO $pdo, array $actor, string $targetId, string $d
 
     $del = $pdo->prepare('DELETE FROM users WHERE id = ?');
     $del->execute([$targetId]);
-    $databaseDropped = drop_database_if_users_empty($pdo, $dbname);
+
+    $isProd = function_exists('is_production_env')
+        ? is_production_env()
+        : (strtolower(trim((string)(getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'production')))) === 'production');
+
+    $databaseDropped = $isProd
+        ? false
+        : drop_database_if_users_empty($pdo, $dbname);
 
     return [
         'ok' => true,

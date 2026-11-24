@@ -172,7 +172,9 @@ try {
     if ($action === 'delete_self') {
         $del = $pdo->prepare("DELETE FROM users WHERE id = ?");
         $del->execute([$actor['id']]);
-        $databaseDropped = drop_database_if_users_empty($pdo, get_configured_dbname());
+        $databaseDropped = is_production_env()
+            ? false
+            : drop_database_if_users_empty($pdo, get_configured_dbname());
 
         $_SESSION = [];
         if (ini_get('session.use_cookies')) {
@@ -265,11 +267,14 @@ try {
 
     json_response(400, ['status' => 'error', 'message' => '未対応のアクションです。']);
 } catch (Throwable $e) {
-    $isLocal = in_array(strtolower((string)(getenv('APP_ENV') ?: '')), ['local', 'test'], true);
+    error_log('[ERROR] ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    $showDetail = function_exists('is_debug_env')
+        ? is_debug_env()
+        : in_array(app_env_name(), ['local', 'test', 'development'], true);
     json_response(500, [
         'status' => 'error',
-        'message' => $isLocal
+        'message' => $showDetail
             ? 'サーバーエラーが発生しました: ' . $e->getMessage()
-            : 'サーバーエラーが発生しました。',
+            : 'サーバー内部でエラーが発生しました。',
     ]);
 }
