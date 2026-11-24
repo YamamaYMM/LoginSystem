@@ -1,6 +1,8 @@
 // tests/login-system.spec.js
 const { test, expect } = require('@playwright/test');
 
+const ALLOWED_LOGIN_TIME = new Date('2026-11-24T12:00:00+09:00');
+
 const rawBaseUrl =
   process.env.PLAYWRIGHT_BASE_URL ||
   process.env.APP_BASE_URL ||
@@ -105,6 +107,7 @@ async function submitLoginAndWaitComplete(page, { name, id, password }, timeout 
 
 test.describe('ログインおよび管理システムのE2E自動テスト', () => {
   test.beforeEach(async ({ page, request }) => {
+    await page.clock.install({ time: ALLOWED_LOGIN_TIME });
     await ensureUsersRegistered(request, INITIAL_USERS);
 
     await page.context().clearCookies();
@@ -171,6 +174,8 @@ test.describe('ログインおよび管理システムのE2E自動テスト', ()
     const context = await browser.newContext();
     const page1 = await context.newPage();
     const page2 = await context.newPage();
+    await page1.clock.install({ time: ALLOWED_LOGIN_TIME });
+    await page2.clock.install({ time: ALLOWED_LOGIN_TIME });
 
     // 1つ目のタブでログイン
     await page1.goto(`${BASE_URL}/LoginTitle.html`);
@@ -199,6 +204,8 @@ test.describe('ログインおよび管理システムのE2E自動テスト', ()
     const context = await browser.newContext();
     const subPage = await context.newPage();
     const userPage = await context.newPage();
+    await subPage.clock.install({ time: ALLOWED_LOGIN_TIME });
+    await userPage.clock.install({ time: ALLOWED_LOGIN_TIME });
 
     // サブマスター側のネイティブダイアログ（confirm / alert）を自動承諾
     subPage.on('dialog', async dialog => {

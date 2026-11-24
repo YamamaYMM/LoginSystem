@@ -14,6 +14,9 @@ test.describe('新規登録・セッション維持・パスワード変更・�
       await dialog.accept().catch(() => {});
     });
 
+    // ログイン可能時間帯（昼12:00）に時刻を固定
+    await page.clock.install({ time: new Date('2026-11-24T12:00:00+09:00') });
+
     // 1. 新規登録画面を開く
     await page.goto('LoginRegister.html');
     await page.locator('#nameInput').fill(userName);
