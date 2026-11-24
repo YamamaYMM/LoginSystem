@@ -1,7 +1,11 @@
 // tests/login-system.spec.js
 const { test, expect } = require('@playwright/test');
 
-const BASE_URL = process.env.APP_BASE_URL || 'http://loginsystem.test';
+const rawBaseUrl =
+  process.env.PLAYWRIGHT_BASE_URL ||
+  process.env.APP_BASE_URL ||
+  'http://localhost/LoginSystem';
+const BASE_URL = rawBaseUrl.replace(/\/+$/, '');
 
 // 8文字以上のテスト用アカウント定義
 const INITIAL_USERS = [

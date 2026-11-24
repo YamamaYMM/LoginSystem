@@ -9,6 +9,11 @@ test.describe('新規登録・セッション維持・パスワード変更・�
     const initPass = 'Str0ng!Pass#2026';
     const nextPass = 'N3w!Str0ng#Pass#2026';
 
+    // alert / confirm が出る場合に備えて遷移前から自動承諾
+    page.on('dialog', async (dialog) => {
+      await dialog.accept().catch(() => {});
+    });
+
     // 1. 新規登録画面を開く
     await page.goto('LoginRegister.html');
     await page.locator('#nameInput').fill(userName);
@@ -58,11 +63,6 @@ test.describe('新規登録・セッション維持・パスワード変更・�
       : page;
     await expect(reloadContainer.locator('#mainContent')).toBeVisible();
     await expect(reloadContainer.locator('#welcomeMessage')).toContainText(userName);
-
-    // alert / confirm が出る場合に備えて自動承諾
-    page.on('dialog', async (dialog) => {
-      await dialog.accept().catch(() => {});
-    });
 
     // 3. パスワード変更モーダル操作
     await reloadContainer.getByRole('button', { name: /パスワードを変更/ }).click();
