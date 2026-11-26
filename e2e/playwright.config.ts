@@ -24,7 +24,7 @@ export default defineConfig({
         webServer: {
           command: 'php -S 127.0.0.1:8000 -t ..',
           url: 'http://127.0.0.1:8000/LoginSystem/LoginTitle.html',
-          reuseExistingServer: !process.env.CI,
+          reuseExistingServer: true, // すでに 8000 番が起動していればそれを使う
           timeout: 30_000,
         },
       }
