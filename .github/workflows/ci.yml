@@ -60,20 +60,23 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
 
-      - name: Start PHP built-in server
+      - name: Start PHP server for E2E
         run: |
-          nohup php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
+          php -S 127.0.0.1:8000 -t /home/runner/work/LoginSystem/LoginSystem >/tmp/php-server.log 2>&1 &
+          SERVER_PID=$!
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
           for i in $(seq 1 30); do
-            code=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/" || true)
-            if [ -n "$code" ] && [ "$code" != "000" ]; then
+            if curl -s http://127.0.0.1:8000/LoginSystem/auth_api.php >/dev/null || curl -s http://127.0.0.1:8000/auth_api.php >/dev/null; then
               break
             fi
-            sleep 1
+            sleep 0.5
           done
 
-      - name: Run Playwright E2E tests
-        working-directory: ./e2e
+      - name: Run Playwright tests
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:8000
         run: npx playwright test
+        working-directory: /home/runner/work/LoginSystem/LoginSystem/e2e
 
       - name: Upload Playwright report on failure
         if: failure()
