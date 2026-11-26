@@ -49,6 +49,13 @@ test.describe('新規登録・セッション維持・パスワード変更・�
   });
 
   test('新規登録後にメインメニューへ遷移し、パスワード変更とログアウトができる', async ({ page }) => {
+    page.on('response', async (res) => {
+      if (res.url().includes('auth_api.php')) {
+        const body = await res.text().catch(() => '<unreadable>');
+        console.log(`[auth_api ${res.request().method()}] ${res.status()} ${res.url()} -> ${body}`);
+      }
+    });
+
     page.on('dialog', (dialog) => {
       dialog.accept().catch(() => {});
     });
