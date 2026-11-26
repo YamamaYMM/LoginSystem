@@ -80,8 +80,13 @@ test.describe('LoginTitle.html ログイン・遷移・セッション維持フ�
     ]);
     expect([200, 201]).toContain(registerRes.status());
 
+    // 登録後の自動遷移・完了処理が落ち着くのを少し待ってからログイン画面へ
+    await page.waitForLoadState('domcontentloaded').catch(() => {});
+    if (!page.url().includes('LoginTitle.html')) {
+      await page.goto(`${BASE_URL}/LoginTitle.html`, { waitUntil: 'domcontentloaded' });
+    }
+
     // 2. LoginTitle.html からログインして LoginComplete.html へ遷移
-    await page.goto(`${BASE_URL}/LoginTitle.html`);
     await page.locator('#nameInput').fill(userName);
     await page.locator('#idInput').fill(userId);
     await page.locator('#passInput').fill(password);
