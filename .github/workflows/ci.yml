@@ -47,6 +47,19 @@ jobs:
         run: |
           find . -maxdepth 3 -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
 
+      - name: Initialize test database
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASS: root
+          DB_NAME: logindatabase_test
+        run: |
+          mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" \
+            -e "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+          # もし SQL スキーマファイル（例: database/schema.sql や sql/init.sql）があれば流す
+          # mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" < path/to/schema.sql
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
