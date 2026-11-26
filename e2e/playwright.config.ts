@@ -14,6 +14,7 @@ export default defineConfig({
   testDir: './tests',
   globalTeardown: './global-teardown.js',
   timeout: 30_000,
+  workers: process.env.CI ? 1 : undefined,
   use: {
     baseURL,
     trace: 'on-first-retry',
