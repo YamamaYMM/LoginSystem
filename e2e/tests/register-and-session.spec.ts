@@ -49,6 +49,10 @@ test.describe('新規登録・セッション維持・パスワード変更・�
   });
 
   test('新規登録後にメインメニューへ遷移し、パスワード変更とログアウトができる', async ({ page }) => {
+    page.on('dialog', (dialog) => {
+      dialog.accept().catch(() => {});
+    });
+
     const uniqueSuffix = Date.now().toString().slice(-6);
     const userName = `E2Eユーザー_${uniqueSuffix}`;
     const userId = `e2e_user_${uniqueSuffix}`;
@@ -73,7 +77,10 @@ test.describe('新規登録・セッション維持・パスワード変更・�
       ),
       page.getByRole('button', { name: '登録する' }).click(),
     ]);
-    expect([200, 201]).toContain(registerRes.status());
+    const registerBody = await registerRes.text();
+    expect([200, 201], `register failed: ${registerRes.status()} ${registerBody}`).toContain(
+      registerRes.status()
+    );
 
     // 2. ログイン画面へ遷移してログイン
     await page.waitForURL(/LoginTitle\.html/);
@@ -89,7 +96,8 @@ test.describe('新規登録・セッション維持・パスワード変更・�
         await page.locator('button[type="submit"]').click();
       })(),
     ]);
-    expect(loginRes.ok()).toBeTruthy();
+    const loginBody = await loginRes.text();
+    expect(loginRes.ok(), `login failed: ${loginRes.status()} ${loginBody}`).toBeTruthy();
 
     await page.waitForURL(/LoginComplete\.html/);
 
@@ -108,11 +116,6 @@ test.describe('新規登録・セッション維持・パスワード変更・�
       : page;
     await expect(reloadContainer.locator('#mainContent')).toBeVisible();
     await expect(reloadContainer.locator('#welcomeMessage')).toContainText(userName);
-
-    // alert / confirm が出る場合に備えて自動承諾
-    page.on('dialog', async (dialog) => {
-      await dialog.accept().catch(() => {});
-    });
 
     // 3. パスワード変更モーダル操作
     await reloadContainer.getByRole('button', { name: /パスワードを変更/ }).click();
