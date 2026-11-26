@@ -364,12 +364,14 @@ class ManagerView {
           this.applyConnectedUi('接続状態: ON（接続中）');
           await this.loadLogsFromDatabase();
         } else {
+          console.error('connectAndInitDatabase 失敗:', data);
           this.setDbConnectionEnabled(false);
           e.target.checked = false;
           this.applyDisconnectedUi(`接続状態: 接続失敗 (${data?.message || 'エラー'})`);
           if (statusMsg) statusMsg.style.color = 'red';
         }
       } catch (err) {
+        console.error('connectAndInitDatabase 失敗:', err);
         this.setDbConnectionEnabled(false);
         e.target.checked = false;
         this.applyDisconnectedUi('接続状態: 通信エラー');

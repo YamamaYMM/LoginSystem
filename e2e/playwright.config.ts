@@ -1,19 +1,27 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig } from '@playwright/test';
 
-declare const process: { env?: Record<string, string | undefined> };
+const rawBaseUrl =
+  process.env.PLAYWRIGHT_BASE_URL ||
+  process.env.APP_BASE_URL ||
+  process.env.BASE_URL ||
+  'http://localhost/LoginSystem';
+
+const baseURL = rawBaseUrl.replace(/\/+$/, '') + '/';
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: false,
-  reporter: 'list',
+  globalTeardown: './global-teardown.js',
+  timeout: 30_000,
   use: {
-    baseURL: process.env?.PLAYWRIGHT_BASE_URL || 'http://localhost/LoginSystem/',
+    baseURL,
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
   },
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-  ],
+  // 必要に応じてローカル／CIで自動起動したい場合のみ有効化
+  // webServer: {
+  //   command: 'php -S 127.0.0.1:8000 -t ..',
+  //   url: 'http://127.0.0.1:8000',
+  //   reuseExistingServer: !process.env.CI,
+  //   timeout: 30_000,
+  // },
 });

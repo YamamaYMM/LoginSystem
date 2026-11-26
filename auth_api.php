@@ -79,6 +79,7 @@ try {
         $user = $res['user'];
         session_regenerate_id(true);
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        $csrfToken = $_SESSION['csrf_token'];
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['role'] = $user['role'];

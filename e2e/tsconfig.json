@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -8,5 +10,5 @@
     "skipLibCheck": true,
     "types": ["node", "@playwright/test"]
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts"]
 }

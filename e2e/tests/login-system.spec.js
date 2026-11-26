@@ -1,8 +1,8 @@
 // tests/login-system.spec.js
 const { test, expect } = require('@playwright/test');
+const { clearPageStorage, createRunTracker } = require('../helpers/cleanup');
 
 const ALLOWED_LOGIN_TIME = new Date('2026-11-24T12:00:00+09:00');
-
 const rawBaseUrl =
   process.env.PLAYWRIGHT_BASE_URL ||
   process.env.APP_BASE_URL ||
@@ -15,17 +15,6 @@ const INITIAL_USERS = [
   { id: 'testsub01', name: 'サブ管理者', password: 'Str0ng!Pass#2026', role: 'submaster' },
   { id: 'testuser01', name: '一般太郎', password: 'Str0ng!Pass#2026', role: 'general' },
 ];
-
-async function resetBrowserStorage(page, { seedDbConfig = false } = {}) {
-  await page.goto(`${BASE_URL}/LoginTitle.html`);
-  await page.evaluate((shouldSeed) => {
-    localStorage.clear();
-    sessionStorage.clear();
-    if (shouldSeed) {
-      localStorage.setItem('dbConfig', JSON.stringify({ enabled: true }));
-    }
-  }, seedDbConfig);
-}
 
 async function getCsrfToken(request) {
   const res = await request.post(`${BASE_URL}/auth_api.php`, {
@@ -61,20 +50,91 @@ async function ensureUsersRegistered(request, users) {
     const statusCode = res.status();
     const body = await res.json().catch(() => ({}));
 
-    if (statusCode === 409 && body.status !== 'success') {
+    if (res.ok() || body.status === 'success' || statusCode === 409) {
       continue;
     }
 
-    if (!res.ok() || body.status !== 'success') {
-      throw new Error(
-        `Failed to seed user ${user.id} (${statusCode}): ${body.message || 'unknown error'}`
-      );
-    }
+    throw new Error(
+      `Failed to seed user ${user.id} (${statusCode}): ${body.message || 'unknown error'}`
+    );
   }
 }
 
-async function cleanupTestUsers() {
-  // auth_api.php に cleanup_test_users アクションは存在しないためスキップ
+async function loginAsAdminAndGetCsrf(request, adminUser) {
+  const initToken = await getCsrfToken(request);
+
+  const loginRes = await request.post(`${BASE_URL}/auth_api.php`, {
+    headers: { 'X-CSRF-Token': initToken },
+    data: {
+      action: 'login_session',
+      csrfToken: initToken,
+      name: adminUser.name,
+      id: adminUser.id,
+      password: adminUser.password,
+    },
+  });
+
+  const loginBody = await loginRes.json().catch(() => ({}));
+  if (!loginRes.ok() || loginBody.status !== 'success') {
+    throw new Error(
+      `Failed to login as admin (${loginRes.status()}): ${loginBody.message || 'unknown error'}`
+    );
+  }
+
+  return loginBody.csrfToken || initToken;
+}
+
+async function deleteUserById(request, csrfToken, targetId) {
+  const res = await request.post(`${BASE_URL}/auth_api.php`, {
+    headers: { 'X-CSRF-Token': csrfToken },
+    data: {
+      action: 'delete_user',
+      csrfToken,
+      targetId,
+    },
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok() || body.status !== 'success') {
+    console.warn(
+      `[cleanupTestUsers] delete_user(${targetId}) skipped/failed (${res.status()}): ${body.message || ''}`
+    );
+  }
+}
+
+async function deleteCurrentSessionUser(request, csrfToken) {
+  const res = await request.post(`${BASE_URL}/auth_api.php`, {
+    headers: { 'X-CSRF-Token': csrfToken },
+    data: { action: 'delete_self', csrfToken },
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok() || body.status !== 'success') {
+    console.warn(
+      `[cleanupTestUsers] delete_self failed (${res.status()}): ${body.message || ''}`
+    );
+  }
+}
+
+async function cleanupTestUsers(request, extraUserIds = [], { deleteAdminSelf = true } = {}) {
+  const adminUser = INITIAL_USERS.find(user => user.role === 'master');
+  if (!adminUser) return;
+
+  try {
+    const activeCsrfToken = await loginAsAdminAndGetCsrf(request, adminUser);
+    const managedTargetIds = Array.from(new Set([
+      ...extraUserIds,
+      ...INITIAL_USERS.filter(user => user.id !== adminUser.id).map(user => user.id),
+    ])).filter(id => Boolean(id) && id !== adminUser.id);
+
+    for (const targetId of managedTargetIds) {
+      await deleteUserById(request, activeCsrfToken, targetId);
+    }
+
+    if (deleteAdminSelf) {
+      await deleteCurrentSessionUser(request, activeCsrfToken);
+    }
+  } catch (err) {
+    console.warn('[cleanupTestUsers] クリーンアップ中にエラー:', err);
+  }
 }
 
 async function submitLoginAndWaitComplete(page, { name, id, password }, timeout = 8000) {
@@ -105,79 +165,35 @@ async function submitLoginAndWaitComplete(page, { name, id, password }, timeout 
   }
 }
 
-test.describe('ログインおよび管理システムのE2E自動テスト', () => {
+test.describe('ログインおよび管理システムのE2E自動テスト（UI競合・管理操作）', () => {
+  const runTracker = createRunTracker();
+
   test.beforeEach(async ({ page, request }) => {
     await page.clock.install({ time: ALLOWED_LOGIN_TIME });
     await ensureUsersRegistered(request, INITIAL_USERS);
 
     await page.context().clearCookies();
     await page.goto(`${BASE_URL}/LoginTitle.html`);
-    await page.evaluate(() => {
-      localStorage.clear();
-      sessionStorage.clear();
+    await clearPageStorage(page);
+  });
+
+  test.afterEach(async ({ page }) => {
+    await clearPageStorage(page);
+  });
+
+  test.afterAll(async ({ request }) => {
+    await cleanupTestUsers(request, runTracker.getTrackedUserIds(), {
+      deleteAdminSelf: true,
     });
   });
 
-  async function loginAndAssertRedirect(page, { name, id, password }, timeout = 8000) {
-    let apiResult = null;
-    const onResponse = async res => {
-      if (res.url().includes('auth_api.php')) {
-        apiResult = { status: res.status(), body: await res.json().catch(() => null) };
-      }
-    };
-    page.on('response', onResponse);
-
-    try {
-      await page.fill('#nameInput', name);
-      await page.fill('#idInput', id);
-      await page.fill('#passInput', password);
-      await page.click('button[type="submit"]');
-      await page.waitForURL(/LoginComplete\.html/, { timeout });
-    } catch (err) {
-      const errText = await page.locator('#errorMessage').textContent().catch(() => '');
-      throw new Error(
-        `Redirect failed. url=${page.url()} errorMessage="${errText}" authApi=${JSON.stringify(apiResult)}`
-      );
-    } finally {
-      page.off('response', onResponse);
-    }
-  }
-
-  test('1. 未入力や不備のある入力でログインエラーメッセージが表示されること', async ({ page }) => {
-    await page.goto(`${BASE_URL}/LoginTitle.html`);
-
-    await page.click('button[type="submit"]');
-    await expect(page.locator('#errorMessage')).toHaveText('お名前、ID、パスワードをすべて入力してください');
-
-    // 8文字未満のIDでエラーになることを確認
-    await page.fill('#nameInput', '一般太郎');
-    await page.fill('#idInput', 'user01'); // 6文字なのでエラーになるべきケース
-    await page.fill('#passInput', 'Password123');
-    await page.click('button[type="submit"]');
-    await expect(page.locator('#errorMessage')).toHaveText('IDは8文字以上入力してください');
-  });
-
-  test('2. 正しい認証情報(8文字以上)でログインし、メインメニューへ遷移すること', async ({ page }) => {
-    await page.goto(`${BASE_URL}/LoginTitle.html`);
-
-    await submitLoginAndWaitComplete(page, {
-      name: '一般太郎',
-      id: 'testuser01',
-      password: 'Str0ng!Pass#2026',
-    }, 5000);
-    await expect(page.locator('#welcomeMessage')).toContainText('一般太郎 さん！');
-  });
-
-  test('3. 同一アカウントの重複ログインがブロックされること', async ({ browser, request }) => {
-    await ensureUsersRegistered(request, INITIAL_USERS);
-
+  test('1. 同一アカウントの重複ログインがブロックされること', async ({ browser }) => {
     const context = await browser.newContext();
     const page1 = await context.newPage();
     const page2 = await context.newPage();
     await page1.clock.install({ time: ALLOWED_LOGIN_TIME });
     await page2.clock.install({ time: ALLOWED_LOGIN_TIME });
 
-    // 1つ目のタブでログイン
     await page1.goto(`${BASE_URL}/LoginTitle.html`);
     await page1.fill('#nameInput', '一般太郎');
     await page1.fill('#idInput', 'testuser01');
@@ -185,7 +201,6 @@ test.describe('ログインおよび管理システムのE2E自動テスト', ()
     await page1.click('button[type="submit"]');
     await page1.waitForURL(`${BASE_URL}/LoginComplete.html`);
 
-    // 2つ目のタブで同じアカウントによるログインを試行
     await page2.goto(`${BASE_URL}/LoginTitle.html`);
     await page2.fill('#nameInput', '一般太郎');
     await page2.fill('#idInput', 'testuser01');
@@ -197,22 +212,17 @@ test.describe('ログインおよび管理システムのE2E自動テスト', ()
     await context.close();
   });
 
-  test('4. サブマスターから一般ユーザーの強制ログアウトが機能すること', async ({ browser, request }) => {
-    await ensureUsersRegistered(request, INITIAL_USERS);
-
-    // active_sessions / forcedLogout:* を localStorage 経由で共有するため同一コンテキストを使用
+  test('2. サブマスターから一般ユーザーの強制ログアウトが機能すること', async ({ browser }) => {
     const context = await browser.newContext();
     const subPage = await context.newPage();
     const userPage = await context.newPage();
     await subPage.clock.install({ time: ALLOWED_LOGIN_TIME });
     await userPage.clock.install({ time: ALLOWED_LOGIN_TIME });
 
-    // サブマスター側のネイティブダイアログ（confirm / alert）を自動承諾
     subPage.on('dialog', async dialog => {
       await dialog.accept();
     });
 
-    // 一般ユーザーでログイン
     await userPage.goto(`${BASE_URL}/LoginTitle.html`);
     await userPage.fill('#nameInput', '一般太郎');
     await userPage.fill('#idInput', 'testuser01');
@@ -220,7 +230,6 @@ test.describe('ログインおよび管理システムのE2E自動テスト', ()
     await userPage.click('button[type="submit"]');
     await userPage.waitForURL(/LoginComplete\.html/, { timeout: 10000 });
 
-    // active_sessions に testuser01 が記録されるのを待つ
     await userPage.waitForFunction(() => {
       try {
         const sessions = JSON.parse(localStorage.getItem('active_sessions')) || [];
@@ -230,7 +239,6 @@ test.describe('ログインおよび管理システムのE2E自動テスト', ()
       }
     }, { timeout: 10000 });
 
-    // サブマスターでログイン
     await subPage.goto(`${BASE_URL}/LoginTitle.html`);
     await subPage.fill('#nameInput', 'サブ管理者');
     await subPage.fill('#idInput', 'testsub01');
@@ -238,35 +246,27 @@ test.describe('ログインおよび管理システムのE2E自動テスト', ()
     await subPage.click('button[type="submit"]');
     await subPage.waitForURL(/LoginComplete\.html/, { timeout: 10000 });
 
-    // 強制ログアウトボタンが有効になるのを待ち、クリック（ポーリング反映待ち込みで10秒）
     const logoutBtn = subPage.locator('.force-logout-btn[data-id="testuser01"]');
     await expect(logoutBtn).toBeEnabled({ timeout: 10000 });
     await logoutBtn.click();
 
-    // userPage 側のカスタムダイアログの「OK」ボタンをクリック
     const okBtn = userPage.locator('[role="alertdialog"] button', { hasText: 'OK' });
     await expect(okBtn).toBeVisible({ timeout: 10000 });
     await okBtn.click();
 
-    // 一般ユーザー側が LoginTitle.html に遷移することを確認
     await expect(userPage).toHaveURL(/LoginTitle\.html/, { timeout: 15000 });
 
     await context.close();
   });
 
-  test('5. 管理画面のDB接続トグルでON/OFFが切り替わること', async ({ page, request }) => {
-    page.on('dialog', async (dialog) => {
-      console.log('[dialog]', dialog.type(), dialog.message());
+  test('3. 管理画面のDB接続トグルでON/OFFが切り替わること', async ({ page }) => {
+    page.on('dialog', async dialog => {
       await dialog.accept().catch(() => {});
     });
-    page.on('response', (res) => {
-      if (res.request().method() !== 'GET') {
-        console.log('[POST/PUT/PATCH]', res.status(), res.url());
-      }
-    });
 
-    await ensureUsersRegistered(request, INITIAL_USERS);
-    await resetBrowserStorage(page, { seedDbConfig: true });
+    await page.evaluate(() => {
+      localStorage.setItem('dbConfig', JSON.stringify({ enabled: true }));
+    });
 
     await submitLoginAndWaitComplete(page, {
       name: 'マスター管理者',
@@ -283,26 +283,24 @@ test.describe('ログインおよび管理システムのE2E自動テスト', ()
 
     await expect(toggleLabel).toBeVisible();
 
-    // 初期状態が OFF の場合は ON に切り替え
     if ((await toggleLabel.textContent())?.trim() === 'OFF') {
-      await toggleSlider.click();
+      await Promise.all([
+        page.waitForResponse(
+          res => res.request().method() === 'POST' && /Database\.php|api\.php/i.test(res.url())
+        ).catch(() => null),
+        toggleSlider.click(),
+      ]);
     }
     await expect(toggleLabel).toHaveText('ON', { timeout: 10000 });
     if (await toggleCheckbox.count()) {
       await expect(toggleCheckbox).toBeChecked();
     }
 
-    // OFF に切り替え
     await toggleSlider.click();
     await expect(toggleLabel).toHaveText('OFF', { timeout: 10000 });
     await expect(page.locator('#dbStatusMessage')).toContainText('OFF');
 
-    // ON に戻す
     await toggleSlider.click();
     await expect(toggleLabel).toHaveText('ON', { timeout: 10000 });
-  });
-
-  test.afterAll(async () => {
-    await cleanupTestUsers();
   });
 });

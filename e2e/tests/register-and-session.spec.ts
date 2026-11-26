@@ -1,7 +1,53 @@
 // e2e/tests/register-and-session.spec.ts
 import { test, expect } from '@playwright/test';
+import { clearPageStorage } from '../helpers/cleanup';
 
 test.describe('新規登録・セッション維持・パスワード変更・ログアウト', () => {
+  let createdUserId: string | null = null;
+  let currentUserName: string | null = null;
+  let currentUserPass: string | null = null;
+
+  test.afterEach(async ({ page, request, baseURL }) => {
+    await clearPageStorage(page);
+
+    if (createdUserId && currentUserName && currentUserPass) {
+      const base = (baseURL || 'http://localhost/LoginSystem').replace(/\/+$/, '');
+      const statusRes = await request.post(`${base}/auth_api.php`, {
+        data: { action: 'session_status' },
+      });
+      const statusBody = await statusRes.json().catch(() => ({}));
+      const token = statusBody.csrfToken;
+
+      if (token) {
+        const loginRes = await request.post(`${base}/auth_api.php`, {
+          headers: { 'X-CSRF-Token': token },
+          data: {
+            action: 'login_session',
+            csrfToken: token,
+            name: currentUserName,
+            id: createdUserId,
+            password: currentUserPass,
+          },
+        });
+        const loginBody = await loginRes.json().catch(() => ({}));
+        const activeToken = loginBody.csrfToken || token;
+
+        if (loginRes.ok() && loginBody.status === 'success') {
+          await request
+            .post(`${base}/auth_api.php`, {
+              headers: { 'X-CSRF-Token': activeToken },
+              data: { action: 'delete_self', csrfToken: activeToken },
+            })
+            .catch(() => {});
+        }
+      }
+    }
+
+    createdUserId = null;
+    currentUserName = null;
+    currentUserPass = null;
+  });
+
   test('新規登録後にメインメニューへ遷移し、パスワード変更とログアウトができる', async ({ page }) => {
     const uniqueSuffix = Date.now().toString().slice(-6);
     const userName = `E2Eユーザー_${uniqueSuffix}`;
@@ -9,13 +55,9 @@ test.describe('新規登録・セッション維持・パスワード変更・�
     const initPass = 'Str0ng!Pass#2026';
     const nextPass = 'N3w!Str0ng#Pass#2026';
 
-    // alert / confirm が出る場合に備えて遷移前から自動承諾
-    page.on('dialog', async (dialog) => {
-      await dialog.accept().catch(() => {});
-    });
-
-    // ログイン可能時間帯（昼12:00）に時刻を固定
-    await page.clock.install({ time: new Date('2026-11-24T12:00:00+09:00') });
+    createdUserId = userId;
+    currentUserName = userName;
+    currentUserPass = initPass;
 
     // 1. 新規登録画面を開く
     await page.goto('LoginRegister.html');
@@ -67,6 +109,11 @@ test.describe('新規登録・セッション維持・パスワード変更・�
     await expect(reloadContainer.locator('#mainContent')).toBeVisible();
     await expect(reloadContainer.locator('#welcomeMessage')).toContainText(userName);
 
+    // alert / confirm が出る場合に備えて自動承諾
+    page.on('dialog', async (dialog) => {
+      await dialog.accept().catch(() => {});
+    });
+
     // 3. パスワード変更モーダル操作
     await reloadContainer.getByRole('button', { name: /パスワードを変更/ }).click();
     await reloadContainer.locator('#currentPassInput').fill(initPass);
@@ -81,6 +128,7 @@ test.describe('新規登録・セッション維持・パスワード変更・�
       reloadContainer.getByRole('button', { name: '変更する' }).click(),
     ]);
     expect(changePassRes.ok()).toBeTruthy();
+    currentUserPass = nextPass;
 
     // モーダルが閉じてポインター遮断が解除されるのを待つ
     await expect(reloadContainer.locator('#passwordModal')).toBeHidden({ timeout: 10000 });

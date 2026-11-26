@@ -132,6 +132,9 @@ class RegisterView {
 
       if (submitBtn) submitBtn.disabled = true;
       try {
+        this.api.clearCsrfToken();
+        await this.api.ensureCsrfToken();
+
         await this.api.registerUser({
           name: nameValue,
           id: newId,

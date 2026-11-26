@@ -2,7 +2,8 @@
 // src/AuthHelpers.php
 declare(strict_types=1);
 
-function can_manage_target(string $actorRole, string $actorId, array $targetUser): bool {
+function can_manage_target(string $actorRole, string $actorId, array $targetUser): bool
+{
     $targetId = (string)($targetUser['id'] ?? '');
     $targetRole = (string)($targetUser['role'] ?? 'general');
 
@@ -18,13 +19,19 @@ function can_manage_target(string $actorRole, string $actorId, array $targetUser
     return false;
 }
 
-function fetch_safe_users(PDO $pdo): array {
-    $stmt = $pdo->query("SELECT id, name, role, is_manager FROM users ORDER BY created_at ASC, id ASC");
-    $rows = $stmt->fetchAll();
+function format_safe_users(array $rows): array
+{
     return array_map(static fn(array $r) => [
         'id' => $r['id'],
         'name' => $r['name'],
         'role' => $r['role'],
         'isManager' => (bool)$r['is_manager'],
     ], $rows);
+}
+
+function fetch_safe_users(PDO $pdo): array
+{
+    $stmt = $pdo->query('SELECT id, name, role, is_manager FROM users ORDER BY created_at ASC, id ASC');
+    $rows = $stmt ? $stmt->fetchAll() : [];
+    return format_safe_users(is_array($rows) ? $rows : []);
 }

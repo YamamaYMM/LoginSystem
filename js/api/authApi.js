@@ -104,13 +104,14 @@ export class AuthApi {
         password,
         time,
       },
-      { includeCsrf: false }
+      { includeCsrf: true }
     );
   }
 
   callDatabaseAction(action, options = {}) {
     const opts = options && typeof options === 'object' ? options : {};
-    const { disconnected = false, includeCsrf = false } = opts;
+    const csrfActions = new Set(['connect_db', 'create', 'create_table', 'save_login', 'reset_logs']);
+    const { disconnected = false, includeCsrf = csrfActions.has(action) } = opts;
     return this.postJson(this.dbEndpoint, {
       action,
       disconnected,

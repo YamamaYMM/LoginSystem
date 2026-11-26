@@ -319,6 +319,10 @@ showLoggingInOverlay() {
         sessionStorage.setItem('loggedInUserId', authRes.user.name);
         sessionStorage.setItem('loggedInId', authRes.user.id);
 
+        // login_session 後の最新 CSRF トークンを取得
+        this.api.clearCsrfToken();
+        await this.api.ensureCsrfToken();
+
         // 履歴DB保存
         const now = new Date();
         const loginTime =

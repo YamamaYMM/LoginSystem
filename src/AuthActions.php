@@ -4,6 +4,20 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/AuthHelpers.php';
 
+function auth_actions_is_production(): bool
+{
+    if (function_exists('is_production_env')) {
+        return is_production_env();
+    }
+
+    $raw = getenv('APP_ENV');
+    if ($raw === false || trim((string)$raw) === '') {
+        $raw = $_ENV['APP_ENV'] ?? $_SERVER['APP_ENV'] ?? 'production';
+    }
+
+    return in_array(strtolower(trim((string)$raw)), ['production', 'prod'], true);
+}
+
 function register_user_account(PDO $pdo, array $input): array
 {
     $name = trim((string)($input['name'] ?? ''));
@@ -181,11 +195,7 @@ function delete_managed_user(PDO $pdo, array $actor, string $targetId, string $d
     $del = $pdo->prepare('DELETE FROM users WHERE id = ?');
     $del->execute([$targetId]);
 
-    $isProd = function_exists('is_production_env')
-        ? is_production_env()
-        : (strtolower(trim((string)(getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'production')))) === 'production');
-
-    $databaseDropped = $isProd
+    $databaseDropped = auth_actions_is_production()
         ? false
         : drop_database_if_users_empty($pdo, $dbname);
 
