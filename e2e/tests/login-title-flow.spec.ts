@@ -93,9 +93,15 @@ test.describe('LoginTitle.html ログイン・遷移・セッション維持フ�
     await page.locator('#passInput').fill(password);
 
     await Promise.all([
-      page.waitForURL(/LoginComplete\.html/),
+      page.waitForURL(/LoginComplete\.html/, { timeout: 20_000 }),
       page.locator('button[type="submit"]').click(),
     ]);
+
+    const errText = await page.locator('#errorMessage').textContent().catch(() => '');
+    if (errText) {
+      throw new Error(`ログイン画面でエラー表示: ${errText}`);
+    }
+
     await expect(page.locator('#mainContent')).toBeVisible();
     await expect(page.locator('#welcomeMessage')).toContainText(userName);
 

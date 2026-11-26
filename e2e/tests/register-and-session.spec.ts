@@ -77,13 +77,13 @@ test.describe('新規登録・セッション維持・パスワード変更・�
       ),
       page.getByRole('button', { name: '登録する' }).click(),
     ]);
-    const registerBody = await registerRes.text();
-    expect([200, 201], `register failed: ${registerRes.status()} ${registerBody}`).toContain(
+    const registerText = await registerRes.text();
+    expect([200, 201], `register failed: ${registerRes.status()} ${registerText}`).toContain(
       registerRes.status()
     );
 
-    // 2. ログイン画面へ遷移してログイン
-    await page.waitForURL(/LoginTitle\.html/);
+    // alert 承諾後に LoginTitle.html へ遷移するのを待つ
+    await page.waitForURL(/LoginTitle\.html/, { timeout: 20_000 });
 
     const [loginRes] = await Promise.all([
       page.waitForResponse(
