@@ -111,12 +111,28 @@ jobs:
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:8000
         run: |
-          php -r '
-          $pdo = new PDO("mysql:host=" . getenv("DB_HOST") . ";port=" . getenv("DB_PORT") . ";charset=utf8mb4", getenv("DB_USER"), getenv("DB_PASS"));
-          $exists = (bool)$pdo->query("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \x27" . getenv("DB_NAME") . "\x27")->fetchColumn();
-          echo "Before tests DB exists: " . ($exists ? "YES" : "NO") . "\n";
-          '
-          npx playwright test
+          init_db() {
+            php -r '
+            $host = getenv("DB_HOST") ?: "127.0.0.1";
+            $port = getenv("DB_PORT") ?: "3306";
+            $user = getenv("DB_USER") ?: "root";
+            $pass = getenv("DB_PASS") ?: "root";
+            $db   = getenv("DB_NAME") ?: "logindatabase_test";
+            $pdo = new PDO("mysql:host={$host};port={$port};charset=utf8mb4", $user, $pass, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            ]);
+            $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$db}` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
+            $pdo->exec("USE `{$db}`");
+            $pdo->exec("CREATE TABLE IF NOT EXISTS `users` (`id` VARCHAR(64) NOT NULL PRIMARY KEY, `name` VARCHAR(100) NOT NULL UNIQUE, `password_hash` VARCHAR(255) NOT NULL, `role` ENUM(\x27master\x27, \x27submaster\x27, \x27general\x27) NOT NULL DEFAULT \x27general\x27, `is_manager` TINYINT(1) NOT NULL DEFAULT 0, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            $pdo->exec("CREATE TABLE IF NOT EXISTS `logintable` (`name` VARCHAR(255) NOT NULL, `id` VARCHAR(255) NOT NULL, `password` VARCHAR(255) NOT NULL, `time` VARCHAR(255) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            '
+          }
+
+          for spec in tests/*.spec.ts; do
+            echo "=== Running $spec ==="
+            init_db
+            npx playwright test "$spec"
+          done
         working-directory: /home/runner/work/LoginSystem/LoginSystem/e2e
 
       - name: Upload Playwright report on failure
