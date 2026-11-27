@@ -48,33 +48,39 @@ jobs:
           find . -maxdepth 3 -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
 
       - name: Initialize test database and tables
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_USER: root
-          DB_PASS: root
-          DB_NAME: logindatabase_test
         run: |
-          mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" <<'SQL'
-          CREATE DATABASE IF NOT EXISTS `logindatabase_test` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-          USE `logindatabase_test`;
+          php -r '
+          $host = getenv("DB_HOST") ?: "127.0.0.1";
+          $port = getenv("DB_PORT") ?: "3306";
+          $user = getenv("DB_USER") ?: "root";
+          $pass = getenv("DB_PASS") ?: "root";
+          $db   = getenv("DB_NAME") ?: "logindatabase_test";
 
-          CREATE TABLE IF NOT EXISTS `users` (
-            `id` VARCHAR(64) NOT NULL PRIMARY KEY,
-            `name` VARCHAR(100) NOT NULL UNIQUE,
-            `password_hash` VARCHAR(255) NOT NULL,
-            `role` ENUM('master', 'submaster', 'general') NOT NULL DEFAULT 'general',
-            `is_manager` TINYINT(1) NOT NULL DEFAULT 0,
-            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-          CREATE TABLE IF NOT EXISTS `logintable` (
-            `name` VARCHAR(255) NOT NULL,
-            `id` VARCHAR(255) NOT NULL,
-            `password` VARCHAR(255) NOT NULL,
-            `time` VARCHAR(255) NOT NULL
-          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-          SQL
+          $pdo = new PDO("mysql:host={$host};port={$port};charset=utf8mb4", $user, $pass, [
+              PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+          ]);
+          $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$db}` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
+          $pdo->exec("USE `{$db}`");
+          $pdo->exec("
+              CREATE TABLE IF NOT EXISTS `users` (
+                  `id` VARCHAR(64) NOT NULL PRIMARY KEY,
+                  `name` VARCHAR(100) NOT NULL UNIQUE,
+                  `password_hash` VARCHAR(255) NOT NULL,
+                  `role` ENUM(\x27master\x27, \x27submaster\x27, \x27general\x27) NOT NULL DEFAULT \x27general\x27,
+                  `is_manager` TINYINT(1) NOT NULL DEFAULT 0,
+                  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+          ");
+          $pdo->exec("
+              CREATE TABLE IF NOT EXISTS `logintable` (
+                  `name` VARCHAR(255) NOT NULL,
+                  `id` VARCHAR(255) NOT NULL,
+                  `password` VARCHAR(255) NOT NULL,
+                  `time` VARCHAR(255) NOT NULL
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+          ");
+          echo "DB initialized successfully.\n";
+          '
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -95,7 +101,7 @@ jobs:
           SERVER_PID=$!
           echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
           for i in $(seq 1 30); do
-            if curl -s http://127.0.0.1:8000/LoginSystem/auth_api.php >/dev/null || curl -s http://127.0.0.1:8000/auth_api.php >/dev/null; then
+            if curl -s http://127.0.0.1:8000/auth_api.php >/dev/null; then
               break
             fi
             sleep 0.5
@@ -114,4 +120,3 @@ jobs:
           name: playwright-report
           path: e2e/playwright-report/
           retention-days: 7
-
