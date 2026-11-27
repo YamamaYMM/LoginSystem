@@ -110,7 +110,13 @@ jobs:
       - name: Run Playwright tests
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:8000
-        run: npx playwright test
+        run: |
+          php -r '
+          $pdo = new PDO("mysql:host=" . getenv("DB_HOST") . ";port=" . getenv("DB_PORT") . ";charset=utf8mb4", getenv("DB_USER"), getenv("DB_PASS"));
+          $exists = (bool)$pdo->query("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \x27" . getenv("DB_NAME") . "\x27")->fetchColumn();
+          echo "Before tests DB exists: " . ($exists ? "YES" : "NO") . "\n";
+          '
+          npx playwright test
         working-directory: /home/runner/work/LoginSystem/LoginSystem/e2e
 
       - name: Upload Playwright report on failure
