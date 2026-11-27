@@ -155,3 +155,6 @@ Stack trace:
 [25-Nov-2026 11:42:34 Asia/Tokyo] [ERROR] データベースが存在しません。マスターアカウントを作成してください。 in C:\laragon\www\LoginSystem\bootstrap.php:193
 [26-Nov-2026 10:09:48 Asia/Tokyo] [ERROR] データベースが存在しません。マスターアカウントを作成してください。 in C:\laragon\www\LoginSystem\bootstrap.php:193
 [26-Nov-2026 18:35:29 Asia/Tokyo] [ERROR] データベースが存在しません。マスターアカウントを作成してください。 in C:\laragon\www\LoginSystem\bootstrap.php:193
+[27-Nov-2026 10:55:15 Asia/Tokyo] [ERROR] データベースが存在しません。マスターアカウントを作成してください。 in C:\laragon\www\LoginSystem\bootstrap.php:193
+[27-Nov-2026 10:56:06 Asia/Tokyo] [ERROR] データベースが存在しません。マスターアカウントを作成してください。 in C:\laragon\www\LoginSystem\bootstrap.php:193
+[27-Nov-2026 10:56:50 Asia/Tokyo] [ERROR] データベースが存在しません。マスターアカウントを作成してください。 in C:\laragon\www\LoginSystem\bootstrap.php:193

@@ -54,13 +54,6 @@ test.describe('LoginTitle.html ログイン・遷移・セッション維持フ�
   test('新規登録したユーザーでログインし、LoginComplete.html 遷移・リロード維持・ログアウトができる', async ({
     page,
   }) => {
-    page.on('response', async (res) => {
-      if (res.url().includes('auth_api.php')) {
-        const body = await res.text().catch(() => '<unreadable>');
-        console.log(`[auth_api ${res.request().method()}] ${res.status()} ${res.url()} -> ${body}`);
-      }
-    });
-
     page.on('dialog', async (dialog) => {
       await dialog.accept().catch(() => {});
     });
